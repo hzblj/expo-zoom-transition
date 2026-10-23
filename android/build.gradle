@@ -1,0 +1,29 @@
+import groovy.json.JsonSlurper
+
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+def packageJson = new JsonSlurper().parseText(file('../package.json').text)
+
+group = 'com.hzblj.expozoomtransition'
+version = packageJson.version
+
+android {
+  namespace "com.hzblj.expozoomtransition"
+  defaultConfig {
+    versionCode 1
+    versionName packageJson.version
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  // The transition is Material's container transform (`MaterialContainerTransform`), a View transition.
+  // react-native-screens depends on the same library, so an app links it already.
+  implementation "com.google.android.material:material:1.13.0"
+  implementation "androidx.core:core-ktx:1.17.0"
+}
