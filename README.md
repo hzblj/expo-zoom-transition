@@ -49,6 +49,10 @@ yarn changeset       # describe a change for the next release
 
 The zoom needs iOS 18 or later; below it the push stays the regular slide.
 
+## More libraries
+
+The other libraries from the same author are at **[libraries.janblazej.dev](https://www.libraries.janblazej.dev)**.
+
 ## License
 
 MIT © Jan Blazej
