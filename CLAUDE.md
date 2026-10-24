@@ -1,60 +1,62 @@
-# @hzblj/expo-zoom-transition
+# expo-zoom-transition
 
-A push that grows out of the view it was opened from, for Expo Router stacks: UIKit's zoom (iOS 18) and Material's
-container transform (Android). An Expo module (`ExpoZoomTransition`: `ios/`, `android/`) and its JS (`src/` →
-`build/`). Built for `@hzblj/kara-ui` (`../kara-ui`), whose router wraps it with design tokens and whose context menu
-hands a tapped preview's photo over as a transient source. Nothing here may know about kara: props take plain values
-(dp, ms, `ColorValue`).
+Turborepo + Yarn 4 workspaces for **`@hzblj/expo-zoom-transition`**: a push that grows out of the view it was opened
+from, for Expo Router stacks, UIKit's zoom transition on iOS 18 and Material's container transform on Android, native
+both ways. React Native and Expo only, no web.
 
-**Three pieces, one identifier.** `Source` on the screen you push from, `Enabler` and `Target` on the pushed screen;
-the identifier travels in the route params (`ZOOM_TRANSITION_PARAM`, read back with `useZoomTransitionParam`). The
-native views look each other up through `ZoomTransitionRegistry`, so neither screen references the other.
+Every package has its own `CLAUDE.md`: read that one before touching it.
 
-**Shared props at the top, platform props under `ios` / `android`.** Every top-level prop works on both platforms; what
-only one can do is typed apart and ignored on the other. Keep it that way when adding a setting. Defaults differ where
-the platforms do: the target's `fit` is `source` on iOS (no stretching) and `target` on Android (the transform
-cross-fades, so it never stretches).
+| Path | Package | What lives there |
+| --- | --- | --- |
+| `packages/expo-zoom-transition/` | `@hzblj/expo-zoom-transition` | The JavaScript API (`src/`), the `ExpoZoomTransition` module (`ios/`, `android/`) and `THIRD_PARTY_NOTICES.md` (the iOS side is adapted from expo-router). |
+| `apps/example/` | `expo-zoom-transition-example` (private) | Expo Router app built with `@hzblj/kara-ui`: a photo grid that zooms into a full-screen modal with every enabler setting to try, albums in a recycled `FlatList` pushed onto long pages under a header, and the same page pushed from a button, a `Link` and a round source. Runs the package from **source**. |
+| `scripts/` | | `pack-check.mjs`: the tarball as npm gets it, and a consumer type-checked against it. |
+| `.yarn/patches/` | | Yarn patches for expo-dev-menu (expo/expo#43338) and react-native-screens (#4711), applied through the root `resolutions`, the same ones kara's example carries. |
+| `.changeset/`, `.github/workflows/` | | Release notes (`yarn changeset`), CI (Biome, typecheck, tests, pack check, the Android module compiled) and the changesets → npm release. |
 
-**Platform files with a fallback.** `ZoomTransition.ios.tsx` / `.android.tsx` for Metro, `ZoomTransition.tsx` for
-everything else (and for the types): it renders children alone. All three are typed `ZoomTransitionComponent`.
+`@hzblj/kara-ui` depends on this package (`@hzblj/kara-router` wraps it with kara's tokens as `ZoomTransition`, and
+`@hzblj/kara-native`'s context menu hands it a tapped preview). In the example, Yarn links kara's range to the
+workspace (transparent workspaces), so there is one copy of the module, the one being edited, and Metro maps kara's
+imports of it to the source too. A version bump here that leaves kara's range (`^0.1.0`) puts a second, published copy
+under kara: bump kara after releasing, or autolinking finds two `ExpoZoomTransition` modules. Check with
+`find node_modules -path '*@hzblj/expo-zoom-transition'`: one symlink, into `packages/`.
 
-## iOS
+## Commands
 
-**Adapted from expo-router, keep the notice.** The split and the aspect-ratio alignment come from expo-router's
-`Link.AppleZoom` (MIT, `THIRD_PARTY_NOTICES.md`). Ours sets the transition on whatever `UIViewController` owns the
-enabler, so it works with any react-native-screens stack.
+```bash
+yarn ios / yarn android      # run the example (dev client)
+yarn prebuild                # a clean `expo prebuild` of the example, after native or config changes
+yarn test                    # nothing yet: the package has no tests, so turbo runs no task and passes
+yarn typecheck / yarn lint   # tsc, Biome
+yarn pack:check              # what npm receives, and a consumer type-check
+yarn changeset               # describe a change for the next release
+```
 
-**Three `display: contents` views.** `ZoomTransitionSourceView` and `ZoomTransitionTargetView` register their single
-child (`mountChildComponentView`); `ZoomTransitionEnablerView` sets its controller's `preferredTransition` from
-`didMoveToSuperview` in a `dispatch_async`, which react-native-screens' push (queued after the mount transaction) runs
-after, so the enabler must be in the pushed screen's first commit. `disableForceFlatten` (read by
-`ExpoViewShadowNode`) keeps them as native views without a layout box. Below iOS 18 nothing is set. Changing
-`dimmingColor` or `dimmingBlur` re-runs the setup, because UIKit copies the options.
+## Conventions that bite
 
-**The interactive dismissal goes through `ZoomTransitionDismissGate`**, like Photos: down only when no scroll view under
-the finger can still scroll up, right only when no horizontal one can still scroll back, never up or left. It only
-answers; it never restarts a recognizer.
+**The example runs the package's source; the world runs `build/`.** The package's `exports` names a `source` entry,
+which the example's `metro.config.js` maps and its `tsconfig.json` mirrors with `paths`, so nothing waits for a build.
+Not a global `source` condition: published packages ship one too, and kara-ui's points at platform-split sources.
 
-**The transient source is public API.** `ZoomTransitionRegistry.shared`, `sourceIdentifier(within:)`,
-`setTransientSource` / `finishTransientSource` and `ZoomTransitionTransientSource(view:cover:)` are what another module
-(kara's `ContextMenuView`, `import ExpoZoomTransition`) uses to zoom from a view that is not the registered source: a
-copy of a tapped preview's photo laid over the window, under a frozen snapshot. The enabler hands the copy to UIKit and
-fades the snapshot over 0.3 s; the copy goes when the push completes. Changing those signatures breaks kara's pod.
+**The example uses the package's API directly**, plain values (dp, ms, `ColorValue`), not kara's token wrapper from
+`@hzblj/kara-ui/router`: it demonstrates this library. kara is for everything else on screen.
 
-## Android
+**Motion is checked on a recording, frame by frame, both ways.** A screenshot cannot tell a zoom from a slide.
+`xcrun simctl io <udid> recordVideo`, then split the frames with ffmpeg. Fast Refresh keeps mounted native views and
+the enabler only acts on a screen's first commit: cold start the app before judging a change to either.
 
-**Material's container transform, not Compose shared elements**: every screen is its own fragment. The target hides
-itself on attach and transforms from the registered source on its first pre-draw with a size; options come from the
-pushed screen's `ZoomTransitionEnablerView` through the registry (it draws nothing). The pop is native and starts
-before JavaScript hears of it, so the enabler calls `reverseZoomTransition` from `beforeRemove`: the target is drawn
-into a bitmap by hand (Fabric views are never `isLaidOut`, `drawToBitmap` throws) and replayed as a ghost into the
-source once that is attached again. Both ends of a fitted transform are `ZoomTransitionFrameView`s in
-`android:id/content`: the transform throws for an end outside it. The source and target override `onLayout` with a
-no-op: `ExpoView` is a `LinearLayout` and the visibility toggle re-laid the children out at 0,0. Never hide an end
-yourself before Material does, or the photo blinks for a frame.
+**The patches are pinned.** The root `resolutions` patch exactly `expo-dev-menu@57.0.20` and
+`react-native-screens@4.26.2`. Moving either means re-creating its patch (`yarn patch`), or dropping it once upstream
+has the fix.
 
-**Known app-side issues, not fixable here** (README, Platform behavior): react-native-screens#4711 swallows a tap for
-~0.5 s after a zoom pop on iOS 18+, and `expo-dev-menu`'s three-finger recogniser breaks the interactive dismissal in a
-dev client (expo/expo#43338). kara's example carries Yarn patches for both.
+**Publish through Yarn, tag through changesets.** `yarn release` runs `yarn npm publish` in every public workspace and
+then `changeset tag`. Never `changeset publish`: its npm call would ship `workspace:` ranges verbatim.
 
-Code style follows `@hzblj/biome-config` (`yarn lint`). Docs copy (README, JSDoc, changesets) has no em dashes.
+**Docs copy has no em dashes.** Not in the READMEs, the JSDoc in `src/` (it is the API reference), changesets or the
+example's captions. Rewrite with a comma, a colon, parentheses or a second sentence. Code comments are exempt.
+
+**Commits are Jan's alone.** Author `Jan Blazej <hello@janblazej.dev>` (set locally in this repo), no co-author or
+generated-by lines.
+
+Code style is Biome-enforced (`@hzblj/biome-config`): 2 spaces, 120 cols, single quotes, no semicolons, sorted imports
+and object keys. Named exports and `const` arrow functions; `type` over `interface`.

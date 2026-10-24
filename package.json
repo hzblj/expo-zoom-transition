@@ -1,83 +1,43 @@
 {
-  "name": "@hzblj/expo-zoom-transition",
-  "version": "0.1.0",
-  "description": "A push that grows out of the view it was opened from, for Expo Router: UIKit's zoom transition on iOS 18 and Material's container transform on Android, native both ways.",
-  "author": "Jan Blazej",
+  "name": "expo-zoom-transition-monorepo",
+  "version": "0.0.0",
+  "private": true,
   "license": "MIT",
-  "main": "./build/index.js",
-  "types": "./build/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./build/index.d.ts",
-      "default": "./build/index.js"
-    },
-    "./expo-module.config.json": "./expo-module.config.json",
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "android/build.gradle",
-    "android/src/**",
-    "build",
-    "expo-module.config.json",
-    "ios",
-    "THIRD_PARTY_NOTICES.md"
+  "workspaces": [
+    "apps/*",
+    "packages/*"
   ],
-  "keywords": [
-    "android",
-    "container-transform",
-    "expo",
-    "expo-module",
-    "expo-router",
-    "hero",
-    "ios",
-    "navigation",
-    "react-native",
-    "shared-element",
-    "transition",
-    "zoom-transition"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hzblj/expo-zoom-transition.git"
-  },
-  "bugs": {
-    "url": "https://github.com/hzblj/expo-zoom-transition/issues"
-  },
-  "homepage": "https://github.com/hzblj/expo-zoom-transition#readme",
   "scripts": {
-    "build": "rm -rf build && tsc -p tsconfig.build.json",
+    "example": "yarn workspace expo-zoom-transition-example",
+    "start": "yarn example start",
+    "ios": "yarn example ios",
+    "android": "yarn example android",
+    "prebuild": "yarn example expo:prebuild",
+    "build": "yarn turbo run build --filter='./packages/*'",
+    "typecheck": "yarn turbo run tsc:check",
+    "lint": "yarn turbo run lint",
+    "test": "yarn turbo run test",
+    "biome:check": "biome check .",
+    "biome:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "pack:check": "yarn build && node ./scripts/pack-check.mjs",
     "changeset": "changeset",
-    "changeset:version": "changeset version",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write .",
-    "prepack": "yarn build",
-    "release": "changeset publish",
-    "typecheck": "tsc -p tsconfig.json"
-  },
-  "peerDependencies": {
-    "expo": ">=57",
-    "expo-router": ">=57",
-    "react": "*",
-    "react-native": "*",
-    "react-native-screens": ">=4"
+    "changeset:version": "changeset version && yarn install --mode=update-lockfile",
+    "release": "yarn build && yarn workspaces foreach --all --no-private --topological npm publish --tolerate-republish && changeset tag",
+    "clean": "rm -rf .turbo node_modules/.cache/turbo && find . -name '.turbo' -type d -prune -exec rm -rf '{}' + && yarn example clean:native"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.4",
     "@changesets/changelog-github": "0.7.0",
     "@changesets/cli": "2.31.1",
     "@hzblj/biome-config": "^0.2.1",
-    "@types/node": "^22.19.0",
-    "@types/react": "~19.2.14",
-    "expo": "~57.0.30",
-    "expo-router": "~57.0.21",
-    "react": "19.2.3",
-    "react-native": "0.86.3",
-    "react-native-screens": "~4.26.0",
-    "typescript": "^7.0.2"
+    "concurrently": "^10.0.5",
+    "turbo": "^2.10.12",
+    "typescript": "~7.0.2"
   },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
+  "resolutions": {
+    "expo-dev-menu@npm:~57.0.20": "patch:expo-dev-menu@npm%3A57.0.20#~/.yarn/patches/expo-dev-menu-npm-57.0.20-b1911ae02f.patch",
+    "react-native-screens@npm:~4.26.0": "patch:react-native-screens@npm%3A4.26.2#~/.yarn/patches/react-native-screens-npm-4.26.2-175183263a.patch"
   },
   "packageManager": "yarn@4.18.0"
 }
