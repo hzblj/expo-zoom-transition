@@ -1,5 +1,11 @@
 # @hzblj/expo-zoom-transition
 
+## 0.1.3
+
+### Patch Changes
+
+- [`ffc9d7f`](https://github.com/hzblj/expo-zoom-transition/commit/ffc9d7f55166097f58ab543ab0fe2e053b42ab30) Thanks [@hzblj](https://github.com/hzblj)! - The README shows the example app on iOS and Android.
+
 ## 0.1.2
 
 ### Patch Changes
