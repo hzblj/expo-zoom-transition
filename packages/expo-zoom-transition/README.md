@@ -5,6 +5,11 @@
 
 A push that grows out of the view it was opened from, and shrinks back into it, for Expo Router stacks. A photo opens into its detail the way it does in Photos and the App Store.
 
+<p>
+  <img alt="A gallery whose photos each zoom open, in the example on iOS" height="560" src="https://raw.githubusercontent.com/hzblj/expo-zoom-transition/main/media/ios-gallery.jpg" />
+  <img alt="The same on Android" height="560" src="https://raw.githubusercontent.com/hzblj/expo-zoom-transition/main/media/android-gallery.jpg" />
+</p>
+
 - iOS 18: UIKit's own zoom transition (`preferredTransition = .zoom`), with the interactive dismissal: swipe down, edge swipe and pinch
 - Android: Material's container transform from the source to the target, both ways
 - The dismissal waits for scroll views: a downward swipe dismisses only once the content under the finger is scrolled to the top

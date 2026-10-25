@@ -5,6 +5,11 @@
 
 A push that grows out of the view it was opened from, and shrinks back into it, for Expo Router stacks. UIKit's own zoom transition on iOS 18, with the interactive dismissal (swipe down, edge swipe and pinch), and Material's container transform on Android, both ways. Any stack screen, not only `Link`.
 
+<p>
+  <img alt="A gallery whose photos each zoom open, in the example on iOS" height="560" src="media/ios-gallery.jpg" />
+  <img alt="The same on Android" height="560" src="media/android-gallery.jpg" />
+</p>
+
 ```sh
 npx expo install @hzblj/expo-zoom-transition
 ```
