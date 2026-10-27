@@ -76,6 +76,11 @@ public final class ZoomTransitionEnablerView: ExpoView {
         return nil
       }
       let rect = target.convert(target.bounds, to: context.zoomedViewController.view)
+      if let transient = ZoomTransitionRegistry.shared.transientSource(for: identifier),
+        transient.view.window != nil, let focusRect = transient.focusRect
+      {
+        return Self.rect(rect, placing: focusRect, within: transient.view.bounds.size)
+      }
       guard ZoomTransitionRegistry.shared.isAspectRatioMatched(for: identifier),
         let source = ZoomTransitionRegistry.shared.source(for: identifier)
       else {
@@ -123,6 +128,20 @@ public final class ZoomTransitionEnablerView: ExpoView {
     case "thick": return UIBlurEffect(style: .systemThickMaterial)
     default: return nil
     }
+  }
+
+  /// The rect the whole source lands on when its `focusRect` lands on `rect`.
+  private static func rect(_ rect: CGRect, placing focusRect: CGRect, within size: CGSize) -> CGRect {
+    guard focusRect.width > 0 else {
+      return rect
+    }
+    let scale = rect.width / focusRect.width
+    return CGRect(
+      x: rect.minX - focusRect.minX * scale,
+      y: rect.minY - focusRect.minY * scale,
+      width: size.width * scale,
+      height: size.height * scale
+    )
   }
 
   /// The largest rect centred in `rect` with the source's aspect ratio, so the source lands without being stretched.

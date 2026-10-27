@@ -114,22 +114,29 @@ public final class ZoomTransitionRegistry {
 }
 
 /**
- A copy of a tapped context menu preview's photo, laid over the window where the preview shows it, with a frozen
- snapshot of the screen on top so the menu does not vanish while JavaScript pushes the next screen. When the push
- starts, the zoom grows from the copy and the frozen screen fades out; the copy goes once the push completes.
+ A copy of a tapped context menu preview, laid over the window where the preview shows it. When the push starts, the
+ zoom grows from the copy; the copy goes once the push completes.
+
+ With a `focusRect` (the photo inside a copy of the whole preview) the target lands on that rect, so the rest of the
+ pushed screen lines up with the rest of the preview. A `cover` (a frozen snapshot of the screen) hides the menu while
+ JavaScript pushes the next screen and fades out when the push starts; `onHandOver` runs at that moment with the copy.
  */
 public final class ZoomTransitionTransientSource {
   private static let coverFadeDuration: TimeInterval = 0.3
 
   let view: UIView
-  private let cover: UIView
+  let focusRect: CGRect?
+  private let cover: UIView?
+  private let onHandOver: ((UIView) -> Void)?
   private var isHandedOver = false
   private var isFinished = false
 
   /// `view` is laid over the window where the source shows, `cover` over the whole screen; both are already added.
-  public init(view: UIView, cover: UIView) {
+  public init(view: UIView, focusRect: CGRect? = nil, cover: UIView?, onHandOver: ((UIView) -> Void)? = nil) {
     self.view = view
+    self.focusRect = focusRect
     self.cover = cover
+    self.onHandOver = onHandOver
   }
 
   func handOver(to zoomedViewController: UIViewController, identifier: String) {
@@ -137,6 +144,7 @@ public final class ZoomTransitionTransientSource {
       return
     }
     isHandedOver = true
+    onHandOver?(view)
     fadeOutCover()
 
     DispatchQueue.main.async { [self] in
@@ -163,7 +171,9 @@ public final class ZoomTransitionTransientSource {
   }
 
   private func fadeOutCover() {
-    let cover = cover
+    guard let cover else {
+      return
+    }
     UIView.animate(
       withDuration: Self.coverFadeDuration,
       delay: 0,

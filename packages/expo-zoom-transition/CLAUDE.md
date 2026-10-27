@@ -36,10 +36,13 @@ the finger can still scroll up, right only when no horizontal one can still scro
 answers; it never restarts a recognizer.
 
 **The transient source is public API.** `ZoomTransitionRegistry.shared`, `sourceIdentifier(within:)`,
-`setTransientSource` / `finishTransientSource` and `ZoomTransitionTransientSource(view:cover:)` are what another module
-(kara's `ContextMenuView`, `import ExpoZoomTransition`) uses to zoom from a view that is not the registered source: a
-copy of a tapped preview's photo laid over the window, under a frozen snapshot. The enabler hands the copy to UIKit and
-fades the snapshot over 0.3 s; the copy goes when the push completes. Changing those signatures breaks kara's pod.
+`setTransientSource` / `finishTransientSource` and `ZoomTransitionTransientSource(view:focusRect:cover:onHandOver:)`
+are what another module (kara's `ContextMenuView`, `import ExpoZoomTransition`) uses to zoom from a view that is not the
+registered source: a copy of a tapped preview laid over the window. The enabler hands the copy to UIKit, calls
+`onHandOver` with it and fades the optional `cover` (a frozen snapshot) over 0.3 s; the copy goes when the push
+completes. With a `focusRect`, the copy is the whole preview and the rect its photo: the alignment rect places the
+target on that rect and scales the rest of the copy around it, so the pushed screen grows out of the whole preview
+rather than its photo. Changing those signatures breaks kara's pod.
 
 ## Android
 
