@@ -1,6 +1,6 @@
 {
   "name": "@hzblj/expo-zoom-transition",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "A push that grows out of the view it was opened from, for Expo Router: UIKit's zoom transition on iOS 18 and Material's container transform on Android, native both ways.",
   "author": "Jan Blazej",
   "license": "MIT",

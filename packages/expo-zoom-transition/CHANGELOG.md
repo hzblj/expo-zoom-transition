@@ -1,5 +1,11 @@
 # @hzblj/expo-zoom-transition
 
+## 0.2.0
+
+### Minor Changes
+
+- [#4](https://github.com/hzblj/expo-zoom-transition/pull/4) [`8da951e`](https://github.com/hzblj/expo-zoom-transition/commit/8da951ecca7efcaf96af87a749ee15c8bdfd3cfd) Thanks [@hzblj](https://github.com/hzblj)! - A transient zoom source can be a copy of a whole context menu preview: `ZoomTransitionTransientSource` takes a `focusRect` (the photo inside it), so the target lands on that photo and the pushed screen grows out of the whole preview. The frozen `cover` is optional, and `onHandOver` runs with the copy when the push starts.
+
 ## 0.1.3
 
 ### Patch Changes
