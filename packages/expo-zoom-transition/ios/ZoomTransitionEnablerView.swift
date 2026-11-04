@@ -15,6 +15,9 @@ import UIKit
  source.
  */
 public final class ZoomTransitionEnablerView: ExpoView {
+  /// How long after the gate let an interactive dismissal begin the next alignment rect still counts as part of it.
+  private static let interactiveDismissalWindow: CFTimeInterval = 0.5
+
   var sourceIdentifier: String = "" {
     didSet {
       guard sourceIdentifier != oldValue, superview != nil else {
@@ -27,6 +30,9 @@ public final class ZoomTransitionEnablerView: ExpoView {
   var isDismissalEnabled: Bool = true
 
   var isHorizontalDismissalEnabled: Bool = true
+
+  /// When `interactiveDismissShouldBegin` last answered yes, so the alignment rect asked right after it knows.
+  private var interactiveDismissalBeganAt: CFTimeInterval = 0
 
   var dimmingColor: UIColor? {
     didSet {
@@ -71,7 +77,14 @@ public final class ZoomTransitionEnablerView: ExpoView {
     options.dimmingColor = dimmingColor
     options.dimmingVisualEffect = dimmingBlur.flatMap(Self.blurEffect)
 
-    options.alignmentRectProvider = { context in
+    // While a finger drags the screen down, UIKit shows the whole screen in the shrinking card, top-aligned, and
+    // switches to the alignment rect the moment the finger lifts or grabs again. A target smaller than the screen
+    // made the content jump inside the card, so an interactive dismissal aligns the whole screen. Opening and a
+    // dismissal by the back button keep the target.
+    options.alignmentRectProvider = { [weak self] context in
+      if let self, self.isInteractiveDismissal(of: context.zoomedViewController) {
+        return context.zoomedViewController.view.bounds
+      }
       guard let target = ZoomTransitionRegistry.shared.target(for: identifier) else {
         return nil
       }
@@ -93,11 +106,15 @@ public final class ZoomTransitionEnablerView: ExpoView {
       guard let self, self.isDismissalEnabled, let view = controller?.view else {
         return false
       }
-      return ZoomTransitionDismissGate.shouldBegin(
+      let shouldBegin = ZoomTransitionDismissGate.shouldBegin(
         in: view,
         context: context,
         allowsHorizontal: self.isHorizontalDismissalEnabled
       )
+      if shouldBegin {
+        self.interactiveDismissalBeganAt = CACurrentMediaTime()
+      }
+      return shouldBegin
     }
 
     controller.preferredTransition = .zoom(options: options) { context in
@@ -107,6 +124,14 @@ public final class ZoomTransitionEnablerView: ExpoView {
       )
       return ZoomTransitionRegistry.shared.source(for: identifier)
     }
+  }
+
+  /// Whether the transition asking for an alignment rect is a dismissal the finger is driving.
+  private func isInteractiveDismissal(of controller: UIViewController) -> Bool {
+    if controller.transitionCoordinator?.isInteractive == true {
+      return true
+    }
+    return CACurrentMediaTime() - interactiveDismissalBeganAt < Self.interactiveDismissalWindow
   }
 
   private func owningViewController() -> UIViewController? {
