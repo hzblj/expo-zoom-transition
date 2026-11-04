@@ -33,7 +33,10 @@ after, so the enabler must be in the pushed screen's first commit. `disableForce
 
 **The interactive dismissal goes through `ZoomTransitionDismissGate`**, like Photos: down only when no scroll view under
 the finger can still scroll up, right only when no horizontal one can still scroll back, never up or left. It only
-answers; it never restarts a recognizer.
+answers; it never restarts a recognizer. An interactive dismissal aligns the whole screen, not the target: UIKit shows the whole
+screen in the dragged card, top-aligned, and switches to the alignment rect when the finger lifts or grabs again, so a
+target smaller than the screen made the content jump. The enabler knows it from the coordinator (`isInteractive`) or
+from the gate having said yes within the last 0.5 s; opening and a back-button dismissal keep the target.
 
 **The transient source is public API.** `ZoomTransitionRegistry.shared`, `sourceIdentifier(within:)`,
 `setTransientSource` / `finishTransientSource` and `ZoomTransitionTransientSource(view:focusRect:cover:onHandOver:)`
