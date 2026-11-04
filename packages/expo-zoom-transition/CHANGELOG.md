@@ -1,5 +1,11 @@
 # @hzblj/expo-zoom-transition
 
+## 0.2.1
+
+### Patch Changes
+
+- [#6](https://github.com/hzblj/expo-zoom-transition/pull/6) [`f6f51cb`](https://github.com/hzblj/expo-zoom-transition/commit/f6f51cb15a447b1b718eb0be45a48265bafb5c5b) Thanks [@hzblj](https://github.com/hzblj)! - iOS: dragging a zoomed screen down keeps its content still in the shrinking card. UIKit shows the whole screen while the finger drags and switches to the alignment rect when it lifts or grabs again, so a target smaller than the screen (a photo under a header, a centred photo in a gallery) made the content jump inside the card. An interactive dismissal now aligns the whole screen; opening and a dismissal by the back button still land on the target.
+
 ## 0.2.0
 
 ### Minor Changes
