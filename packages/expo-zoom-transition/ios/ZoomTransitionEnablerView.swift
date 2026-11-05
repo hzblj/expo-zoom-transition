@@ -15,9 +15,6 @@ import UIKit
  source.
  */
 public final class ZoomTransitionEnablerView: ExpoView {
-  /// How long after the gate let an interactive dismissal begin the next alignment rect still counts as part of it.
-  private static let interactiveDismissalWindow: CFTimeInterval = 0.5
-
   var sourceIdentifier: String = "" {
     didSet {
       guard sourceIdentifier != oldValue, superview != nil else {
@@ -31,8 +28,12 @@ public final class ZoomTransitionEnablerView: ExpoView {
 
   var isHorizontalDismissalEnabled: Bool = true
 
-  /// When `interactiveDismissShouldBegin` last answered yes, so the alignment rect asked right after it knows.
-  private var interactiveDismissalBeganAt: CFTimeInterval = 0
+  /// Set when `interactiveDismissShouldBegin` answers yes and cleared when that transition completes, finished or
+  /// cancelled, so every alignment rect UIKit asks for during it (also after the finger lifts) knows it is a drag.
+  private var isInteractiveDismissalActive = false
+
+  /// Whether the completion that clears `isInteractiveDismissalActive` is already queued on the transition.
+  private var isInteractiveDismissalEndObserved = false
 
   var dimmingColor: UIColor? {
     didSet {
@@ -112,7 +113,8 @@ public final class ZoomTransitionEnablerView: ExpoView {
         allowsHorizontal: self.isHorizontalDismissalEnabled
       )
       if shouldBegin {
-        self.interactiveDismissalBeganAt = CACurrentMediaTime()
+        self.isInteractiveDismissalActive = true
+        self.isInteractiveDismissalEndObserved = false
       }
       return shouldBegin
     }
@@ -128,10 +130,35 @@ public final class ZoomTransitionEnablerView: ExpoView {
 
   /// Whether the transition asking for an alignment rect is a dismissal the finger is driving.
   private func isInteractiveDismissal(of controller: UIViewController) -> Bool {
-    if controller.transitionCoordinator?.isInteractive == true {
-      return true
+    guard let coordinator = controller.transitionCoordinator else {
+      return isInteractiveDismissalActive
     }
-    return CACurrentMediaTime() - interactiveDismissalBeganAt < Self.interactiveDismissalWindow
+    if isInteractiveDismissalActive {
+      observeInteractiveDismissalEnd(coordinator)
+    }
+    return coordinator.isInteractive || isInteractiveDismissalActive
+  }
+
+  /// Clears `isInteractiveDismissalActive` once the transition completes, or after its duration if UIKit no longer
+  /// takes a completion.
+  private func observeInteractiveDismissalEnd(_ coordinator: UIViewControllerTransitionCoordinator) {
+    guard !isInteractiveDismissalEndObserved else {
+      return
+    }
+    isInteractiveDismissalEndObserved = true
+    let isQueued = coordinator.animate(alongsideTransition: nil) { [weak self] _ in
+      self?.endInteractiveDismissal()
+    }
+    if !isQueued {
+      DispatchQueue.main.asyncAfter(deadline: .now() + coordinator.transitionDuration) { [weak self] in
+        self?.endInteractiveDismissal()
+      }
+    }
+  }
+
+  private func endInteractiveDismissal() {
+    isInteractiveDismissalActive = false
+    isInteractiveDismissalEndObserved = false
   }
 
   private func owningViewController() -> UIViewController? {
