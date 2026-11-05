@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
+import android.view.ViewTreeObserver
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.views.ExpoView
 
@@ -33,11 +34,13 @@ class ZoomTransitionTargetView(context: Context, appContext: AppContext) : ExpoV
   private var photoAspectRatio: Float? = null
   private val location = IntArray(2)
   private val windowBounds = Rect()
+  private val scrollChangedListener = ViewTreeObserver.OnScrollChangedListener { recordWindowBounds() }
 
   override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) = Unit
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
+    viewTreeObserver.addOnScrollChangedListener(scrollChangedListener)
     val id = identifier ?: return
     ZoomTransitionRegistry.registerTarget(id, this)
 
@@ -56,11 +59,24 @@ class ZoomTransitionTargetView(context: Context, appContext: AppContext) : ExpoV
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
+    viewTreeObserver.removeOnScrollChangedListener(scrollChangedListener)
     identifier?.let { ZoomTransitionRegistry.unregisterTarget(it, this) }
   }
 
   override fun dispatchDraw(canvas: Canvas) {
     super.dispatchDraw(canvas)
+    recordWindowBounds()
+  }
+
+  /**
+   * Where `reverse` starts the way back. Recorded when the target draws, when anything in its window scrolls and when
+   * its enter starts: with hardware rendering a scrolled page never redraws the target, and a fitted target stays
+   * invisible until its enter ends, so the bounds stayed at the unscrolled place or empty.
+   */
+  private fun recordWindowBounds() {
+    if (width == 0 || height == 0) {
+      return
+    }
     getLocationInWindow(location)
     windowBounds.set(location[0], location[1], location[0] + width, location[1] + height)
   }
@@ -92,6 +108,7 @@ class ZoomTransitionTargetView(context: Context, appContext: AppContext) : ExpoV
   }
 
   private fun enter(source: ZoomTransitionSourceView, id: String) {
+    recordWindowBounds()
     val options = ZoomTransitionRegistry.options(id)
     val content = contentView()
     if (!isFittedToSourceAspectRatio || content == null || source.width == 0 || source.height == 0) {

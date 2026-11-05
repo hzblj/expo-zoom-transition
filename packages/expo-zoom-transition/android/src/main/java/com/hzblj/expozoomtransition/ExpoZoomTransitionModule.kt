@@ -4,6 +4,7 @@ import android.graphics.Color
 import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import expo.modules.kotlin.types.ColorCompat
 
 class ExpoZoomTransitionModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -47,7 +48,7 @@ class ExpoZoomTransitionModule : Module() {
         view.options = view.options.copy(pathMotion = pathMotion ?: "arc")
       }
       Prop("scrimColor") { view: ZoomTransitionEnablerView, color: Color? ->
-        view.options = view.options.copy(scrimColor = color?.toArgb() ?: Color.TRANSPARENT)
+        view.options = view.options.copy(scrimColor = color?.let { ColorCompat.toArgb(it) } ?: Color.TRANSPARENT)
       }
     }
 
