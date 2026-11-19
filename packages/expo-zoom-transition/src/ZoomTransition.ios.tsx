@@ -24,7 +24,11 @@ type NativeWrapperProps = {
 
 type NativeSourceProps = NativeWrapperProps & {identifier: string}
 
-type NativeTargetProps = NativeWrapperProps & {identifier: string; isAspectRatioMatched: boolean}
+type NativeTargetProps = NativeWrapperProps & {
+  identifier: string
+  isAspectRatioMatched: boolean
+  isHorizontalDismissalBlocked: boolean
+}
 
 type NativeEnablerProps = NativeWrapperProps & {
   dimmingBlur?: ZoomTransitionBlur
@@ -67,6 +71,7 @@ const Target = ({children, identifier, ios}: ZoomTransitionTargetProps) =>
       disableForceFlatten
       identifier={identifier}
       isAspectRatioMatched={ios?.fit !== 'target'}
+      isHorizontalDismissalBlocked={ios?.pagesHorizontally === true}
       style={CONTENTS}
     >
       {children}

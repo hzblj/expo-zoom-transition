@@ -11,6 +11,9 @@ public final class ZoomTransitionTargetView: ExpoView {
   /// Whether the source lands in a rect of its own aspect ratio centred in the target, or over the whole target.
   var isAspectRatioMatched = true
 
+  /// Whether the content pages sideways under its own gesture, so a rightward swipe over it never starts the dismissal.
+  var isHorizontalDismissalBlocked = false
+
   var identifier: String = "" {
     didSet {
       guard identifier != oldValue, let child else {

@@ -11,6 +11,9 @@ extension ZoomTransitionTargetView {
       Prop("isAspectRatioMatched") { (view: ZoomTransitionTargetView, isMatched: Bool?) in
         view.isAspectRatioMatched = isMatched ?? true
       }
+      Prop("isHorizontalDismissalBlocked") { (view: ZoomTransitionTargetView, isBlocked: Bool?) in
+        view.isHorizontalDismissalBlocked = isBlocked ?? false
+      }
     }
   }
 }

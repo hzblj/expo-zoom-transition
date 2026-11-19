@@ -32,7 +32,8 @@ after, so the enabler must be in the pushed screen's first commit. `disableForce
 `dimmingColor` or `dimmingBlur` re-runs the setup, because UIKit copies the options.
 
 **The interactive dismissal goes through `ZoomTransitionDismissGate`**, like Photos: down only when no scroll view under
-the finger can still scroll up, right only when no horizontal one can still scroll back, never up or left. It only
+the finger can still scroll up, right only when no horizontal one can still scroll back and no target under it has
+`ios.pagesHorizontally` (a gesture-handler carousel has no scroll view the gate could ask), never up or left. It only
 answers; it never restarts a recognizer. An interactive dismissal aligns the whole screen, not the target: UIKit shows the whole
 screen in the dragged card, top-aligned, and switches to the alignment rect when the finger lifts or grabs again, so a
 target smaller than the screen made the content jump. The enabler knows it from the coordinator (`isInteractive`) or
