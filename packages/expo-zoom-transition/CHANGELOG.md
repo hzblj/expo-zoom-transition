@@ -1,5 +1,11 @@
 # @hzblj/expo-zoom-transition
 
+## 0.3.0
+
+### Minor Changes
+
+- [#10](https://github.com/hzblj/expo-zoom-transition/pull/10) [`bc8363b`](https://github.com/hzblj/expo-zoom-transition/commit/bc8363bf5b75dc19fb0b0b87e859e791193b669f) Thanks [@hzblj](https://github.com/hzblj)! - `ZoomTransition.Target` takes `ios.pagesHorizontally` for a target that pages sideways under its own gesture, such as a gesture-handler carousel of photos. A rightward swipe over it now pages instead of starting the interactive dismissal, which only knew to wait for scroll views.
+
 ## 0.2.2
 
 ### Patch Changes
