@@ -3,8 +3,9 @@ import UIKit
 /**
  Decides whether UIKit's interactive zoom dismissal (swipe down, edge swipe, pinch) may begin, the way Photos and the
  App Store behave: a downward swipe dismisses only when no scroll view under the finger can still scroll up, a
- rightward one only when no horizontal scroll view under it can still scroll back; upward and leftward swipes never
- do. It only answers and never restarts a gesture recognizer.
+ rightward one only when no horizontal scroll view under it can still scroll back and no target under it pages
+ sideways under its own gesture (`isHorizontalDismissalBlocked`: a gesture-handler carousel has no scroll view to
+ ask); upward and leftward swipes never do. It only answers and never restarts a gesture recognizer.
  */
 @available(iOS 18.0, *)
 enum ZoomTransitionDismissGate {
@@ -21,27 +22,34 @@ enum ZoomTransitionDismissGate {
       return allowsHorizontal && context.willBegin
     }
 
-    let scrollViews = scrollViewsUnder(context.location, in: rootView)
+    let touchedViews = viewsUnder(context.location, in: rootView)
+    let scrollViews = touchedViews.compactMap { $0 as? UIScrollView }.filter(\.isScrollEnabled)
 
     if abs(velocity.dx) > abs(velocity.dy) {
-      return allowsHorizontal && velocity.dx > 0 && !scrollViews.contains(where: canScrollTowardsLeadingEdge)
+      return allowsHorizontal
+        && velocity.dx > 0
+        && !touchedViews.contains(where: blocksHorizontalDismissal)
+        && !scrollViews.contains(where: canScrollTowardsLeadingEdge)
     }
 
     return velocity.dy > 0 && !scrollViews.contains(where: canScrollTowardsTop)
   }
 
-  private static func scrollViewsUnder(_ location: CGPoint, in rootView: UIView) -> [UIScrollView] {
-    var scrollViews: [UIScrollView] = []
+  /// The hit view under the finger and every ancestor up to the root.
+  private static func viewsUnder(_ location: CGPoint, in rootView: UIView) -> [UIView] {
+    var views: [UIView] = []
     var view = rootView.hitTest(location, with: nil)
 
     while let current = view, current !== rootView.superview {
-      if let scrollView = current as? UIScrollView, scrollView.isScrollEnabled {
-        scrollViews.append(scrollView)
-      }
+      views.append(current)
       view = current.superview
     }
 
-    return scrollViews
+    return views
+  }
+
+  private static func blocksHorizontalDismissal(_ view: UIView) -> Bool {
+    (view as? ZoomTransitionTargetView)?.isHorizontalDismissalBlocked == true
   }
 
   private static func canScrollTowardsLeadingEdge(_ scrollView: UIScrollView) -> Bool {

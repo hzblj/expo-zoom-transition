@@ -26,6 +26,12 @@ export type ZoomTransitionTargetIosOptions = {
    * nothing is stretched. `target`: the whole target.
    */
   fit?: 'source' | 'target'
+  /**
+   * The target pages sideways under its own gesture (a gesture-handler carousel of photos), so a rightward swipe over
+   * it pages instead of starting the interactive dismissal. A scroll view needs nothing: the dismissal already waits
+   * until it is back at its leading edge. Default `false`.
+   */
+  pagesHorizontally?: boolean
 }
 
 export type ZoomTransitionTargetAndroidOptions = {
